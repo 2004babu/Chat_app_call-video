@@ -1,28 +1,44 @@
 const jwt = require("jsonwebtoken");
+// const { RESPONSE_SENDER } = require("./RESPONSE_SENDER");
 
-const setJWT = async (user, res, msg) => {
-  try {
-    const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: Date.now() + 2 * 24 * 60 * 60 * 1000,
-    });
+const SetJWT = async (res,status, user) => {
+  if (!user?._id) {
+    return res.status(status??200).json({ message: "user Id Not Found!!" });
+  }
 
-    if (!token) {
-      return console.log("errror");
-    }
+  const token = await jwt.sign({ id: user?._id }, process.env.JWT_SECRET, {
+    algorithm: "HS256",
+    expiresIn: "7d",
+  });
 
+  console.log(token);
+  if (!token) {
+    return res.status(404).json({ message:"token not set" });
+  }
+  //    return RESPONSE_SENDER(res,200,{user,token})
+  if (process.env.NODE_ENV === "devlopment") {
     return res
       .status(200)
       .cookie("chat_app", token, {
-        maxAge: Date.now() + 24 * 60 * 60 * 1000,
-        httpOnly: process.env.NODE_ENV === "production",
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "",
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        path: "/",
+        secure: process.env.NODE_ENV === "Production",
+        sameSite: "strict",
       })
-      .json({ message: msg ?? "jwt set SuucessFully", user, token });
-  } catch (error) {
-    console.log(error);
-    return res.status(200).json({ message: "Error in Create jwt!" });
+      .json({message:"set JWT", success: true, user });
+  } else {
+    return res
+      .status(200)
+      .cookie("chat_app", token, {
+        maxAge: 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        path: "/",
+        secure: process.env.NODE_ENV === "Production",
+        sameSite: "strict",
+      })
+      .json({ success: true });
   }
 };
 
-module.exports = setJWT;
+module.exports = SetJWT;

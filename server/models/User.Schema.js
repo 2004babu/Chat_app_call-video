@@ -16,6 +16,12 @@ const userSchema = mongoose.Schema(
     resetPasswordTokenExpire: Date,
     isNewUser: { type: Boolean, default: false },
     privateAccount: { type: Boolean, default: false },
+    lastChat: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        time: Date,
+      },
+    ],
   },
   { timeStamp: true }
 );

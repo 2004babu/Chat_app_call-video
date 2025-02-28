@@ -4,7 +4,7 @@ const userModel = require('../models/User.Schema');
 const isAuthendicatedUser=async(req,res,next)=>{
     try {
         const {chat_app}=req.cookies
-        console.log(req.cookies);
+        // console.log(req.cookies);
         
         if (!chat_app) {
             return res.status(200).json({ message: "cookie Not Found !" });

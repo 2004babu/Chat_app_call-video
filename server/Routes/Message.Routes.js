@@ -6,14 +6,17 @@ const {
   listAccounts,
   searchAccount,
   chat,
+  getConversations,
+  
 } = require("../Controllers/message.Controllers");
 
 const route = express.Router();
 
 route.post("/addfriend", isAuthendicatedUser, addFriend);
 route.post("/searchAccount", isAuthendicatedUser, searchAccount);
-route.post("/listAccounts", isAuthendicatedUser, listAccounts);
+route.get("/listAccounts", isAuthendicatedUser, listAccounts);
 route.post("/chat", isAuthendicatedUser, chat);
+route.get("/conversation", isAuthendicatedUser, getConversations);
 // route.post("/resettoken", ChangePass);
 // route.post("/ChangePass/reset/:token", resetPass);
 // route.post("/profilepic", isAuthendicatedUser,image.single('profile'), addProfile);

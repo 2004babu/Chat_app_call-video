@@ -6,6 +6,8 @@ const {
   ChangePass,
   resetPass,
   addProfile,
+  loadUser,
+  getSingleUser,
 } = require("../Controllers/Auth.Controllers");
 const route = express.Router();
 const isAuthendicatedUser = require("../utils/isAuthendicatedUser");
@@ -24,6 +26,10 @@ const image = multer({ storage });
 
 route.post("/signup", signup);
 route.post("/login", login);
+route.get("/loadUser",isAuthendicatedUser, loadUser);
+// route.get("/singleuser",isAuthendicatedUser, loadUser);
+route.get("/user", isAuthendicatedUser, getSingleUser);
+
 route.post("/resettoken", ChangePass);
 route.post("/ChangePass/reset/:token", resetPass);
 route.post("/profilepic", isAuthendicatedUser,image.single('profile'), addProfile);
