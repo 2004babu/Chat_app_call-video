@@ -8,7 +8,7 @@ const {
   chat,
   getConversations,
   
-} = require("../Controllers/message.Controllers");
+} = require("../Controllers/message.Controllers.js");
 
 const route = express.Router();
 
