@@ -8,7 +8,7 @@ const app = express();
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173"; // Dynamic frontend URL
+const CLIENT_URL = process.env.CLIENT_URL  // Dynamic frontend URL
 
 const server = http.createServer(app);
 
@@ -30,6 +30,7 @@ const AuthRoute = require("./Routes/Auth.Routes");
 const MessageRoute = require("./Routes/Message.Routes.js");
 const db = require("./utils/db.js");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 
 const users = new Map();
 
@@ -86,11 +87,17 @@ app.use("/chatapi/auth", AuthRoute);
 app.use("/chatapi/message", MessageRoute);
 
 
+app.use(express.static(path.join(__dirname,'../client/dist')))
+app.use(express.static(path.join(__dirname,'../client/dist/index.html')))
 
+app.use('/',(req,res)=>{
+  res.sendFile(path.join(__dirname,'../client/dist/index.html'))
+});
 app.use((err, req, res, next) => {
   logger.error(err.stack);
   res.status(500).json({ message: "Internal Server Error" });
 });
+
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

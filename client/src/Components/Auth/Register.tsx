@@ -1,7 +1,7 @@
 import axios from "axios"
 import React, { useState } from "react"
 import { useDispatch } from "react-redux"
-import { clearUser, setUser as setStateUser } from '../../Redux/Slices/UserSlice'
+import {  setUser as setStateUser } from '../../Redux/Slices/UserSlice'
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
 

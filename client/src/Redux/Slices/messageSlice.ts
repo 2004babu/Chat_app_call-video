@@ -42,7 +42,7 @@ const messageSlice = createSlice({
         setSigleMessage: (state, action: PayloadAction<ConversationType>) => {
             state.conversation.messages = action.payload.conversation.messages
         },
-        clearConversation: (state, action: PayloadAction<ConversationType>) => {
+        clearConversation: (state) => {
             state.conversation = {
                 _id: '',
                 messages: [],
