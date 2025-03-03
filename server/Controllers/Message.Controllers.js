@@ -81,7 +81,7 @@ exports.chat = async (req, res, next) => {
 
     Chatuser.lastChat = [
       { userId: userId, time: Date.now() },
-      ...user.lastChat.filter(
+      ...Chatuser.lastChat.filter(
         (item) => item.userId.toString() !== userId.toString()
       ),
     ];

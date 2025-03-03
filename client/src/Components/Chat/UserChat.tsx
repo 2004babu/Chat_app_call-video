@@ -208,7 +208,7 @@ if (!userChatId) {
                                     ? "Online" : "Offline"}
                             </p>                        </div>
                     </div>
-                    <button disabled={isOnlineUser} onClick={openCalltap} className='p-4 bg-green-300 rounded-lg'><i className="fa-solid fa-phone"></i></button>
+                    <button disabled={isOnlineUser} onClick={openCalltap} className='p-4 bg-green-300 rounded-lg'><i className="fa-solid fa-video"></i></button>
                 </div>
 
                 <div ref={wholeChatRefEle} className="bg-gray-800 p-4 w-full flex flex-col gap-3 h-full overflow-x-scroll hide_scroll_bar ">

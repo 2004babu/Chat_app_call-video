@@ -28,7 +28,7 @@ exports.signup = async (req, res, next) => {
       return res.status(404).json({ message: "Error In Create User!" });
     }
 
-    setJWT(user, res, "Sign UP Successful");
+    setJWT(res,200, user);
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({ error: error.message });
@@ -157,7 +157,7 @@ exports.resetPass = async (req, res, next) => {
     user.resetPasswordTokenExpire = undefined;
 
     await user.save({ validateBeforeSave: true });
-    setJWT(user, res, "password Changed Successfully!");
+    setJWT(res,200, user);
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({ error: error.message });

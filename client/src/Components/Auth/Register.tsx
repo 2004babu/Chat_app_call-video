@@ -1,9 +1,10 @@
 import axios from "axios"
-import React, { useState } from "react"
-import { useDispatch } from "react-redux"
+import React, { useEffect, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
 import {  setUser as setStateUser } from '../../Redux/Slices/UserSlice'
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
+import { RootState } from "../../Redux/Store"
 
 
 interface userType {
@@ -21,6 +22,14 @@ const Register = () => {
   const dispatch = useDispatch()
   const [submitLoading, setIssubmitLoading] = useState<boolean>(false)
 
+
+  const { user: C_User } = useSelector((state: RootState) => state.user)
+
+  useEffect(() => {
+    if (C_User?._id) {
+      navigate('/')
+    }
+  }, [C_User?._id])
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 

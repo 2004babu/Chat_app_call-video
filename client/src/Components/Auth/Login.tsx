@@ -1,11 +1,11 @@
 import axios from "axios"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { setUser as setStateUser } from '../../Redux/Slices/UserSlice'
 import { RootState } from "../../Redux/Store"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
-import sendToast from "../utils/SendToast"
+
 interface userType {
   email: string,
   password: string,
@@ -15,6 +15,14 @@ const Login = () => {
   const dispatch = useDispatch()
   const [submitLoading, setIssubmitLoading] = useState<boolean>(false)
   const navigate = useNavigate()
+  const { user: C_User } = useSelector((state: RootState) => state.user)
+
+  useEffect(() => {
+    if (C_User?._id) {
+      navigate('/')
+    }
+  }, [C_User?._id])
+
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -37,7 +45,7 @@ const Login = () => {
     try {
       setIssubmitLoading(true)
       const apiURL = import.meta.env.VITE_BACKEND_URL
-      const response = await axios.post(apiURL + "/auth/login", user,{withCredentials:true})
+      const response = await axios.post(apiURL + "/auth/login", user, { withCredentials: true })
       console.log(response.data.user);
 
       if (response.data.user) {
@@ -45,7 +53,7 @@ const Login = () => {
         dispatch(setStateUser(response.data))
         navigate('/')
       }
-      sendToast(response.data.message, null)
+      // sendToast(response.data.message, null)
 
 
 

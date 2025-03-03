@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
 // const { RESPONSE_SENDER } = require("./RESPONSE_SENDER");
 
-const SetJWT = async (res,status, user) => {
+const SetJWT = async (res,statusCode, user) => {
   if (!user?._id) {
-    return res.status(status??200).json({ message: "user Id Not Found!!" });
+    return res.status(statusCode??200).json({ message: "user Id Not Found!!" });
   }
 
   const token = await jwt.sign({ id: user?._id }, process.env.JWT_SECRET, {
