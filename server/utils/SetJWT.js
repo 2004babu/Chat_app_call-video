@@ -37,7 +37,7 @@ const SetJWT = async (res,statusCode, user) => {
         secure: process.env.NODE_ENV === "Production",
         sameSite: "strict",
       })
-      .json({ success: true });
+      .json({ success: true ,user});
   }
 };
 

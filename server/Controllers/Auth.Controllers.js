@@ -25,7 +25,7 @@ exports.signup = async (req, res, next) => {
     const user = await userModel.create({ userName, password, email });
 
     if (!user) {
-      return res.status(404).json({ message: "Error In Create User!" });
+      return res.status(404).json({user:user, message: "Error In Create User!" });
     }
 
     setJWT(res,200, user);
