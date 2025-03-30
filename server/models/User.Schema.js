@@ -5,9 +5,10 @@ const crypto = require("crypto");
 
 const userSchema = mongoose.Schema(
   {
+    uid: { type: String, required: true },
     userName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, select: false },
+    // password: { type: String, required: true, select: false },
     ProfilePic: { type: String },
     friendlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     friendRequestlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -18,7 +19,7 @@ const userSchema = mongoose.Schema(
     privateAccount: { type: Boolean, default: false },
     lastChat: [
       {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        userId: { type:String },
         time: Date,
       },
     ],

@@ -9,7 +9,9 @@ const IsAuthUser: React.FC<{ children: ReactNode }> = ({ children }) => {
 
     const { user } = useSelector((state: RootState) => state.user)
 
-    if (!user?._id) {
+
+    
+    if (!user?.uid) {
         return <Login />
     }
     return children

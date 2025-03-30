@@ -1,22 +1,25 @@
 import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setChatUser, setUser } from '../../Redux/Slices/UserSlice'
+import { setChatUser, setUser, setUsers } from '../../Redux/Slices/UserSlice'
 import { RootState } from '../../Redux/Store'
 import { useNavigate, useParams } from 'react-router-dom'
 import { setConversation } from '../../Redux/Slices/messageSlice'
 
 import { useCall } from '../Call/Call'
 import { useSocketContext } from '../Context/SocketContext'
+import { Helmet } from 'react-helmet-async'
 
 
 const UserChat = () => {
     const { id: userChatId } = useParams()
-if (!userChatId) {
-    return null
-}
+    if (!userChatId) {
+        return null
+    }
 
 
+
+    const inputRef = useRef<HTMLInputElement | null>(null)
     // const [isFriend, setIsFriend] = useState<boolean>(false)
     const [isOnlineUser, setIsOnlineUser] = useState<boolean>(false)
     const dispatch = useDispatch()
@@ -24,9 +27,10 @@ if (!userChatId) {
     const [ChatSendisLoaded, setChatSendisLoaded] = useState<boolean>(false)
     const [chatText, setChatText] = useState<string>('')
 
-    const { ChatUser, user } = useSelector((state: RootState) => state.user)
+    const { ChatUser, user, users } = useSelector((state: RootState) => state.user)
     const { conversation } = useSelector((state: RootState) => state.conversation)
 
+    // console.log(ChatUser);
 
     const navigate = useNavigate()
     const wholeChatRefEle = useRef<HTMLDivElement>(null)
@@ -45,7 +49,7 @@ if (!userChatId) {
 
             if (response.data.user) {
 
-                dispatch(setChatUser(response.data))
+                dispatch(setChatUser(response.data.user))
             }
 
         } catch (error) {
@@ -66,7 +70,7 @@ if (!userChatId) {
 
             if (response.data.user) {
 
-                dispatch(setUser(response.data))
+                dispatch(setUser(response.data.user))
             }
 
         } catch (error) {
@@ -96,8 +100,7 @@ if (!userChatId) {
     useEffect(() => {
         getConversation()
         loadUser()
-        getSingleUser()      
-        console.log('enter ');
+        getSingleUser()
 
     }, [userChatId])
 
@@ -113,11 +116,12 @@ if (!userChatId) {
 
 
     useEffect(() => {
-        if (ChatUser?._id && onlineUsers) {
+        if (ChatUser && onlineUsers) {
 
-            setIsOnlineUser(!onlineUsers?.includes(ChatUser._id))
+            setIsOnlineUser(!onlineUsers?.includes(ChatUser.uid))
         }
-    }, [ChatUser?._id, onlineUsers])
+    }, [ChatUser, onlineUsers])
+    // console.log( onlineUsers?.some((usr) => usr.toString() === ChatUser?.uid?.toString() )  );
 
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -129,11 +133,21 @@ if (!userChatId) {
         const data = { receiverId: userChatId, msg: chatText };
 
         if (socket) {
+
+            let filteredUsers = [];
+
+
+            filteredUsers = users.filter(Item => Item.uid.toString() !== userChatId.toString())
+            let findedUser = users.filter(Item => Item.uid.toString() === userChatId.toString())
+            // console.log(findedUser, filteredUsers);
+
+            dispatch(setUsers([...findedUser, ...filteredUsers]))
+
             socket?.emit('newMsg', data);
 
             if (conversation._id) {
                 const updatedMessages = [...conversation.messages, {
-                    senderId: user?._id ?? '',
+                    senderId: user?.uid ?? '',
                     receiverId: userChatId ?? '',
                     message: chatText ?? '',
                 }];
@@ -154,11 +168,16 @@ if (!userChatId) {
             if (!conversation._id && response.data.conversation) {
                 dispatch(setConversation(response.data));
             }
+
+
         } catch (error) {
             console.log(error);
         } finally {
             setChatText('');
             setChatSendisLoaded(false);
+            if (inputRef.current) {
+                inputRef.current.focus()
+            }
         }
     };
 
@@ -177,34 +196,43 @@ if (!userChatId) {
             })
         }
 
+        if (inputRef.current) {
+            inputRef.current.focus()
+        }
         autoScrollDown()
     }, [socket, conversation])
 
+
+    
+    
     const autoScrollDown = () => {
 
         wholeChatRefEle.current?.scrollTo(0, wholeChatRefEle.current?.scrollHeight)
         wholeChatRefEle.current?.scroll({ behavior: 'smooth' })
+
 
     }
     // console.log(conversation);
     const openCalltap = () => {
 
         if (isOnlineUser) return
-        callUser(ChatUser?._id ?? "")
+        callUser(ChatUser?.uid ?? "")
         navigate('/call');
     }
 
 
     return (
         <>
+            <Helmet title={ChatUser?.userName ?? ChatUser?.email} />
+
             {isLoaded && <div className='w-full h-full flex flex-col justify-between overflow-hidden border border-gray-400  '>
                 <div className='flex flex-row justify-between items-start px-5 py-3 border-b-2 border-gray-200 '>
                     <div className="flex-row flex justify-between items-start ">
                         <div className="flex ms-14 flex-col justify-center items-center">
-                            <h5 className='text-md font-semibold'>{ChatUser?.userName.trim().substring(0, 20)}</h5>
-                            <p className={`text-[14px] font-semibold ${onlineUsers?.some((usr) => usr.toString() === ChatUser?._id?.toString())
+                            <h5 className='text-md font-semibold'>{ChatUser?.userName && ChatUser?.userName.trim().substring(0, 20)}</h5>
+                            <p className={`text-[14px] font-semibold ${onlineUsers?.some((usr) => usr.toString() === ChatUser?.uid?.toString())
                                 ? "text-green-400" : ""}`}>
-                                {onlineUsers?.some((usr) => usr.toString() === ChatUser?._id?.toString())
+                                {onlineUsers?.some((usr) => usr.toString() === ChatUser?.uid?.toString())
                                     ? "Online" : "Offline"}
                             </p>                        </div>
                     </div>
@@ -217,18 +245,19 @@ if (!userChatId) {
 
                             <div key={index} className={`w-full flex flex-row items-center ${msg?.receiverId === userChatId ? "justify-end" : "justify-start"}
                              h-fit text-wrap `}>
-                                <p className={`w-56 bg-green-400 px-2 py-2 
+                                <h1 className={`w-56 bg-white px-2 py-1.5 
                                  overflow-hidden
-                                 rounded-md  text-lg font-semibold text-wrap wrap ${msg?.receiverId === userChatId ? "text-end" : "text-start"}`}>{msg?.message.toString()}</p>
+                                 rounded-md  flex-col  flex text-lg font-semibold text-wrap wrap ${msg?.receiverId === userChatId ? "text-end" : "text-start"}`}>{msg?.message.toString()}</h1>
                             </div>
                         ))
-                        : <>no chat there</>
+                        : <div className='flex flex-col w-ful rounded h-16 items-center justify-center
+                         bg-gray-500 text-gray-100 p-2 '><p className='text-lg font-bold  '> Start Conversation</p></div>
                     }
 
 
                 </div>
                 <form id='chatInput' onSubmit={handleSubmit} className='  bottom-0   flex flex-row h-[40px] items-center justify-between w-full border-red-300 border-t-2  '>
-                    <input type="text" value={chatText} onChange={(e) => { setChatText(e.target.value) }} className='py-3 px-2 outline-none border-none w-full h-full  text-lg text-md font-bold' />
+                    <input type="text" ref={inputRef} value={chatText} onChange={(e) => { setChatText(e.target.value) }} className='py-3 px-2 outline-none border-none w-full h-full  text-lg text-md font-bold' />
                     <button type='submit' form='chatInput' className='px-2 py-3 text-center h-full w-20'>{ChatSendisLoaded ? <i className='fa-solid fa-spinner'></i> : <i className=' fa-solid fa-paper-plane  '></i>}</button>
                 </form>
 

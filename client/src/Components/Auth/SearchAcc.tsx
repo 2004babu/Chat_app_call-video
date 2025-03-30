@@ -2,8 +2,11 @@ import axios from 'axios'
 import { ChangeEvent, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '../../Redux/Store'
-import { clearsearchUsers, setsearchUsers } from '../../Redux/Slices/UserSlice'
+import { clearSearchUsers, setSearchUsers } from '../../Redux/Slices/UserSlice'
 import UserList from '../Static/UserList'
+
+import dompurify from 'dompurify'
+
 
 const SearchAcc = () => {
 
@@ -29,12 +32,12 @@ const SearchAcc = () => {
     const fetchUser = async (userName: string = search, onPage: number = page) => {
 
         try {
-            console.log(onPage);
+            // console.log(onPage);
 
             if (userName.trim() === '') {
-                dispatch(clearsearchUsers())
+                dispatch(clearSearchUsers())
 
-                return console.log('emty value!!');
+                // return console.log('emty value!!');
 
 
             }
@@ -45,9 +48,9 @@ const SearchAcc = () => {
             const response = await axios.post(apiURL + "/message/searchAccount", { search: userName, onPage }, { withCredentials: true, signal: abortcontrollerref.current.signal })
 
             if (response?.data?.users) {
-                console.log(response.data);
+                // console.log(response.data);
                 let newuserslist: any
-                console.log(users?.searchUsers);
+                // console.log(users?.searchUsers);
 
                 if (users?.searchUsers?.length) {
                     if (page !== 0) {
@@ -60,9 +63,8 @@ const SearchAcc = () => {
                     newuserslist = { searchUsers: response.data.users };
                 }
 
-                console.log(newuserslist);
 
-                dispatch(setsearchUsers(newuserslist));
+                dispatch(setSearchUsers(newuserslist.searchUsers));
 
                 if (response.data.users.length < 2) {
                     setHasMore(false)
@@ -77,7 +79,7 @@ const SearchAcc = () => {
                 console.log('abort Error');
 
             }
-            dispatch(clearsearchUsers())
+            dispatch(clearSearchUsers())
 
             console.log(error);
 
@@ -86,18 +88,19 @@ const SearchAcc = () => {
     }
 
     const changeHandler = (e: ChangeEvent<HTMLInputElement>) => {
+        const search = dompurify.sanitize(e.target.value)
         setPage(0)
-        setSearch(e.target.value)
-        fetchUser(e.target.value, 0)
+        setSearch(search)
+        fetchUser(search, 0)
         // console.log(e);
 
     }
-    console.log(hasMore,page);
+    // console.log(hasMore, page);
 
     return (
         <div className='w-full h-full'>
             <div className="text-[16px] font-semibold flex flex-row justify-between bg-gray-400 items-center px-2 gap-5 py-3">
-                {search &&<button type='button'>
+                {search && <button type='button'>
                     <i className='fa fa-arrow-left'></i>
                 </button>}
                 <input value={search} placeholder='Search' onChange={changeHandler} type="text" name="searchAcc" id="searchAcc" className="px-2 py-3 bg-gray-300  w-full outline-none rounded-lg" />

@@ -3,6 +3,7 @@ import Peer from "simple-peer";
 import { useSelector } from "react-redux";
 import { RootState } from "../../Redux/Store";
 import { useSocketContext } from "../Context/SocketContext";
+// import { useNavigate } from "react-router-dom";
 
 interface CallContextProps {
   myStream: MediaStream | null;
@@ -13,6 +14,7 @@ interface CallContextProps {
   callUser: (id: string) => void;
   answerCall: () => void;
   endCall: () => void;
+  declineCall?: () => void;
   setCall: React.Dispatch<any>;
 }
 
@@ -26,21 +28,31 @@ export const Call: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const userVideo = useRef<HTMLVideoElement>(null);
   const connectionRef = useRef<Peer.Instance | null>(null);
 
+  // const navigate = useNavigate()
+
   const { user, ChatUser } = useSelector((state: RootState) => state.user);
   const { socket } = useSocketContext()!;
 
   useEffect(() => {
     if (!socket) return;
 
-    socket?.on("callIncoming", ({ from, signal }) => {
-      setCall({ isReceivingCall: true, from, signal });
+    socket?.on("callIncoming", ({ from, signal,name }) => {
+      setCall({ isReceivingCall: true, from, signal, name });
     });
-    
+
     return () => {
       socket?.off("callIncoming");
     };
   }, [socket]);
 
+  const SetMyStreamEmpty = async () => {
+    console.log(myStream);
+
+    if (myStream) {
+      myStream.getTracks().forEach((track) => track.stop());
+      setMyStream(null);
+    }
+  }
   useEffect(() => {
     if (!socket) return;
 
@@ -52,18 +64,56 @@ export const Call: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       connectionRef.current = null;
       setCall(null);
       setCallAccepted(false);
-      if (myStream) {
-        myStream.getTracks().forEach((track) => track.stop());
-        setMyStream(null);
-      }
+      SetMyStreamEmpty()
 
       window.location.reload()
       if (userVideo.current) userVideo.current.srcObject = null;
 
     });
 
+
     return () => {
       socket?.off("endedCall");
+    };
+  }, [socket]);
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+
+    socket?.on("declineCall", async () => {
+      console.log("declineCall...", myStream);
+
+      // Destroy Peer Connection
+      // connectionRef.current?.destroy();
+      // connectionRef.current = null;
+      // setCall(null);
+      // setCallAccepted(false);
+
+      //   // Stop and clear media stream
+
+      // if (myStream) {
+      //   myStream.getTracks().forEach((track) => track.stop());
+      //   setMyStream(null);
+      // }    
+
+      // Remove video from UI
+      // if (userVideo.current) {
+      //   userVideo.current.srcObject = null;
+      // }
+
+      // Fully disable camera & mic
+
+      window?.location?.reload()
+
+
+    });
+
+
+
+    return () => {
+      socket?.off("declineCall");
     };
   }, [socket]);
 
@@ -91,7 +141,9 @@ export const Call: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const peer = new Peer({ initiator: true, trickle: false, stream });
 
     peer.on("signal", (signal) => {
-      socket?.emit("callUser", { userToCall: id, signalData: signal, from: socket.id, name: user?.userName ?? "" });
+      console.log(user);
+      
+      socket?.emit("callUser", { userToCall: id, signalData: signal, from: socket.id, name: user?.userName ?? user?.email });
     });
 
     peer.on("stream", (remoteStream) => {
@@ -131,21 +183,22 @@ export const Call: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     connectionRef.current = peer;
   };
 
-console.log(call);
+  // console.log(call);
 
   const endCall = () => {
-    console.log(socket, ChatUser?._id);
+    console.log(socket, ChatUser?.uid);
 
-    if (socket && ChatUser?._id) {
+    if (socket && ChatUser?.uid) {
       console.log('emiter');
 
-      socket?.emit('endedCall', { to: ChatUser._id
+      socket?.emit('endedCall', {
+        to: ChatUser.uid
       })
     }
     if (socket && call?.from) {
       console.log('emiter');
 
-      socket?.emit('endedCall', { to: call.from})
+      socket?.emit('endedCall', { to: call.from })
     }
     console.log("Ending call...");
     connectionRef.current?.destroy();
@@ -161,8 +214,36 @@ console.log(call);
 
   };
 
+  const declineCall = () => {
+    console.log('decline call');
+
+    if (socket && ChatUser?.uid) {
+      console.log('declineCall');
+
+      socket?.emit('declineCall', {
+        to: ChatUser.uid
+      })
+    }
+    if (socket && call?.from) {
+      console.log('emiter');
+
+      socket?.emit('declineCall', { to: call.from })
+    }
+    console.log("Ending call...");
+    connectionRef.current?.destroy();
+    connectionRef.current = null;
+    setCall(null);
+    setCallAccepted(false);
+    if (myStream) {
+      myStream.getTracks().forEach((track) => track.stop());
+      // setMyStream(null);
+    }
+    if (userVideo.current) userVideo.current.srcObject = null;
+    // window.location.reload()
+
+  };
   return (
-    <CallContext.Provider value={{ setCall, myStream, call, callAccepted, myVideo, userVideo, callUser, answerCall, endCall }}>
+    <CallContext.Provider value={{ setCall, myStream, call, callAccepted, myVideo, userVideo, callUser, answerCall, endCall, declineCall }}>
       {children}
     </CallContext.Provider>
   );

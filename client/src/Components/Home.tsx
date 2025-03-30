@@ -1,5 +1,4 @@
-import { RootState } from "../Redux/Store";
-import { useSelector } from "react-redux";
+
 import Header from "./Static/Header";
 import React, { ReactNode } from "react";
 import UserChat from "./Chat/UserChat";
@@ -10,8 +9,8 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, sideContent=false }) => {
-  const UserState = useSelector((state: RootState) => state.user);
-  console.log(UserState);
+  // const UserState = useSelector((state: RootState) => state.user);
+  // console.log(UserState);
 
   return (
     <div className="h-screen w-screen flex flex-row overflow-hidden">

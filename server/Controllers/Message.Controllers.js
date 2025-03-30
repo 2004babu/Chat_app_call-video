@@ -11,14 +11,11 @@ exports.addFriend = async (req, res, next) => {
 };
 exports.chat = async (req, res, next) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.uid;
     const { msg = "", receiverId } = req.body;
 
-   
-    if (userId.toString()===receiverId.toString()) {
-      return res
-        .status(400)
-        .json({ message: "con't send msg self" });
+    if (userId.toString() === receiverId.toString()) {
+      return res.status(400).json({ message: "con't send msg self" });
     }
     if (!msg.length > 0 || !receiverId) {
       return res
@@ -66,7 +63,7 @@ exports.chat = async (req, res, next) => {
       conversation = await conversation.populate("messages");
     }
 
-    let user = await userModel.findById(userId);
+    let user = await userModel.findOne({ uid: userId });
 
     user.lastChat = [
       { userId: receiverId, time: Date.now() },
@@ -77,7 +74,7 @@ exports.chat = async (req, res, next) => {
 
     await user.save();
 
-    let Chatuser = await userModel.findById(receiverId);
+    let Chatuser = await userModel.findOne({ uid: receiverId });
 
     Chatuser.lastChat = [
       { userId: userId, time: Date.now() },
@@ -87,11 +84,17 @@ exports.chat = async (req, res, next) => {
     ];
 
     await Chatuser.save();
-console.log(Chatuser,receiverId,userId);
+    console.log(Chatuser, receiverId, userId);
 
     return res
       .status(200)
-      .json({ message: "msg Send Successfuly!", conversation, message, user, Chatuser});
+      .json({
+        message: "msg Send Successfuly!",
+        conversation,
+        message,
+        user,
+        Chatuser,
+      });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ error });
@@ -104,12 +107,12 @@ exports.listAccounts = async (req, res, next) => {
     const userlastChat = user.lastChat.map((item) => item.userId.toString());
     // console.log(userlastChat);
 
-    let friends = await userModel.find({ _id: { $in: userlastChat } });
+    let friends = await userModel.find({ uid: { $in: userlastChat } });
 
     friends.sort(
       (a, b) =>
-        userlastChat.indexOf(a._id.toString()) -
-        userlastChat.indexOf(b._id.toString())
+        userlastChat.indexOf(a.uid.toString()) -
+        userlastChat.indexOf(b.uid.toString())
     );
 
     return res.status(200).json({ users: friends ?? [] });
@@ -120,10 +123,10 @@ exports.listAccounts = async (req, res, next) => {
 };
 exports.getConversations = async (req, res, next) => {
   try {
-    const user = req.user;
+    // const user = req.user;
     const chatuserId = req.query.id;
 
-    const userId = req.user?._id?.toString();
+    const userId = req.user?.uid?.toString();
     const chatUserIdStr = chatuserId?.toString();
 
     if (!userId || !chatUserIdStr) {

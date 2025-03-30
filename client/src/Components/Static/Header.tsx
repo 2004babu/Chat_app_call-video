@@ -9,11 +9,10 @@ const Header = () => {
 
   return (
     <div className="flex bg-gray-500 flex-col justify-between w-full items-center ">
-      <div className="flex bg-gray-500 flex-row justify-between w-full items-center p-5">
-        <h1 className="text-[15px] font-bold">ChatApp</h1>
-        <h1 className="text-[20px] font-bold" >{user?.userName.trim().substring(0,(user?.userName.indexOf('@')))}</h1>
+      <div className="flex bg-gray-500 text-white flex-row justify-between w-full items-center p-5">
+        <h1 className="text-[15px]  font-bold">ChatApp</h1>
+        <h1 className="text-[15px] font-bold" ><i className="fa-solid fa-user me-2"></i> {user?.email && user?.email?.trim().substring(0, (user?.email.indexOf('@')))}</h1>
       </div>
-
       <SearchAcc />
     </div>
   )

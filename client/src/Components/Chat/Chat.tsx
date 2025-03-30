@@ -8,38 +8,40 @@ import { useDispatch, useSelector } from 'react-redux'
 const Chat = () => {
 
 
- 
+
 
     const users = useSelector((state: RootState) => state.user)
     const dispatch = useDispatch<AppDispatch>()
 
 
 
-    useEffect(() => {
-        getUsers()
-    }, [])
     const getUsers = async () => {
         try {
             const apiURL = import.meta.env.VITE_BACKEND_URL
             const response = await axios.get(apiURL + "/message/listAccounts", { withCredentials: true })
-
+            
             if (response.data.users) {
-                dispatch(setUsers(response.data))
+                console.log(response.data.users);
+                
+                dispatch(setUsers(response.data.users))
             }
         } catch (error) {
-
+            
             console.log(error);
-
+            
         }
 
     }
-
-
-
-
+    
+    
+    useEffect(() => {
+        getUsers()
+    }, [])
+    
+    
     return (
         <div className='flex flex-col w-full h-ful'>
-            <UserList   hasMore={false}  fetchUser={getUsers}  users={users.users} />
+            <UserList hasMore={false} fetchUser={getUsers} users={users.users} />
         </div>
     )
 }

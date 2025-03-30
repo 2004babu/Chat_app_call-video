@@ -4,17 +4,17 @@ const cors = require("cors");
 const http = require("http");
 const dotenv = require("dotenv");
 const app = express();
+const admin = require("./firebase.js");
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
-const CLIENT_URL = process.env.CLIENT_URL  // Dynamic frontend URL
+const CLIENT_URL = process.env.CLIENT_URL; // Dynamic frontend URL
 
 const server = http.createServer(app);
 
 const corsOptions = {
   origin: CLIENT_URL,
-  allowedHeaders: ["Content-Type"],
   methods: ["POST", "GET"],
   credentials: true,
 };
@@ -47,12 +47,12 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("callUser", ({ userToCall, signalData, from, name }) => {
+  socket.on("callUser", ({ userToCall, signalData, from, name:userName }) => {
     if (users.has(userToCall?.toString())) {
       io.to(users.get(userToCall?.toString())).emit("callIncoming", {
         signal: signalData,
         from,
-        name,
+        name:userName,
         userId,
       });
     }
@@ -69,6 +69,13 @@ io.on("connection", (socket) => {
       io.to(data.to).emit("endedCall", data);
     }
   });
+  socket.on("declineCall", (data) => {
+    if (users.has(data.to.toString())) {
+      io.to(users.get(data?.to?.toString())).emit("declineCall", data);
+    } else {
+      io.to(data.to).emit("declineCall", data);
+    }
+  });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected", socket.id);
@@ -83,21 +90,34 @@ app.use(express.urlencoded({ extended: true }));
 
 db();
 
+// app.post("/send-notifications", async (req, res, next) => {
+//   try {
+//     const { token, title, body } = req.body;
+
+//     const message = { notification: { title, body }, token };
+
+//     await admin.messaging().send(message);
+
+//     res.status(200).send("Notification sent!");
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Error sending notification");
+//   }
+// });
+
 app.use("/chatapi/auth", AuthRoute);
 app.use("/chatapi/message", MessageRoute);
 
+app.use(express.static(path.join(__dirname, "../client/dist")));
+app.use(express.static(path.join(__dirname, "../client/dist/index.html")));
 
-app.use(express.static(path.join(__dirname,'../client/dist')))
-app.use(express.static(path.join(__dirname,'../client/dist/index.html')))
-
-app.use('/',(req,res)=>{
-  res.sendFile(path.join(__dirname,'../client/dist/index.html'))
+app.use("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
 app.use((err, req, res, next) => {
   logger.error(err.stack);
   res.status(500).json({ message: "Internal Server Error" });
 });
-
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
