@@ -38,7 +38,14 @@ route.post("/emailSignup", firebaseGoogleLogin, EmailSignup);
 // route.post("/gogglelogin", firebaseGoogleLogin, gogglelogin);
 // route.post("/emaillogin", firebaseGoogleLogin, emaillogin);
 route.post("/setjwt", firebaseGoogleLogin, async (req, res) => {
-  SetJWT(res, 200, req.user);
+try {
+  const user= await userModel.findOne({uid:req.user.uid})
+  SetJWT(res, 200, user);
+  
+} catch (error) {
+  console.log(error);
+  
+}
 });
 
 route.post("/signup", firebaseGoogleLogin, signup);

@@ -38,9 +38,16 @@ export const sighInWithGoogle = async () => {
 
         const apiurl = import.meta.env.VITE_BACKEND_URL
 
-        const response = await axios.post(apiurl + '/auth/gogglesignup', {}, { headers: { Authorization: `Bearer ${token}` } })
+      const response=  await axios.post(apiurl + '/auth/gogglesignup', {}, { headers: { Authorization: `Bearer ${token}` } })
 
-        console.log(response);
+        if (response.data.user) {
+
+            return response.data.user
+        } else {
+            return null
+
+        }
+
 
     } catch (error) {
         console.log(error);
@@ -63,13 +70,15 @@ export const signUpEmailAndPassword = async (email: string, password: string, na
 
         const response = await axios.post(apiurl + '/auth/emailSignup', {}, { headers: { Authorization: `Bearer ${token}` } })
 
-        console.log(response);
 
-        if (result.user) {
+        await axios.post(apiurl + '/auth/setjwt', {}, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } })
 
-            return `"Welcome! " ${result.user.displayName ?? result.user.email}`
+
+        if (response.data.user) {
+
+            return response.data.user
         } else {
-            return 'User Not Create!'
+            return null
 
         }
 

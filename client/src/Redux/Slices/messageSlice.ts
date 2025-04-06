@@ -19,14 +19,31 @@ export interface ConversationType {
         messages: messageType[]
     }
 }
+export interface UnreadedMSGType {
 
+    Re_user: string
+    message: string
+    Re_time?: string
+    count?: number
+    seened?: boolean
 
-const initialState: ConversationType = {
+}
+
+export interface initialType {
+    conversation: {
+        _id: string,
+        participants: string[],
+        messages: messageType[]
+    }, UnreadedMSG: UnreadedMSGType[]
+}
+
+const initialState: initialType = {
     conversation: {
         _id: '',
         messages: [],
         participants: []
-    }
+    },
+    UnreadedMSG: []
 }
 
 
@@ -42,12 +59,15 @@ const messageSlice = createSlice({
         setSigleMessage: (state, action: PayloadAction<ConversationType>) => {
             state.conversation.messages = action.payload.conversation.messages
         },
+        
+        
         clearConversation: (state) => {
             state.conversation = {
                 _id: '',
                 messages: [],
                 participants: []
             };
+
         }
 
     }

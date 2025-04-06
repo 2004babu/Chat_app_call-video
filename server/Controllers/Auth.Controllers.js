@@ -101,11 +101,12 @@ exports.gogglesignup = async (req, res, next) => {
     if (!req.user.uid) {
       return res.status(404).json({ message: "Error In Create User!" });
     }
-    console.log(req.user)
+    console.log(req.user);
     const user = await userModel.create({
       userName: req.user.email,
       uid: req.user.uid,
       email: req.user.email,
+      ProfilePic: req.user.ProfilePic ?? "",
     });
     if (!user) {
       return res

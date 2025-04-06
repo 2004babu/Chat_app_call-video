@@ -14,6 +14,7 @@ route.post(
 );
 route.get("/listAccounts", isAuthendicatedUser, messageController.listAccounts);
 route.post("/chat", isAuthendicatedUser, messageController.chat);
+route.post("/seenedmsg", isAuthendicatedUser, messageController.seenedmsg);
 route.get(
   "/conversation",
   isAuthendicatedUser,

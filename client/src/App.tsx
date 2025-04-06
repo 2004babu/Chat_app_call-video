@@ -81,23 +81,25 @@ function App() {
 
         const apiurl = import.meta.env.VITE_BACKEND_URL
 
-        await axios.post(apiurl + '/auth/setjwt', {}, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } })
+        const response = await axios.post(apiurl + '/auth/setjwt', {}, { withCredentials: true, headers: { Authorization: `Bearer ${token}` } })
 
 
+        if (response.data.user) {
+          dispatch(setUser(response.data.user))
+        }
+        // const userData = {
+        //   uid: firebaseUser.uid,
+        //   email: firebaseUser.email || "",
+        //   userName: firebaseUser.displayName || "Anonymous",
+        //   profilePic: firebaseUser.photoURL || "",
+        //   friendlist: [],
+        //   friendRequestlist: [],
+        //   isNewUser: false,
+        //   privateAccount: false,
+        // };
 
-        const userData = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || "",
-          userName: firebaseUser.displayName || "Anonymous",
-          profilePic: firebaseUser.photoURL || "",
-          friendlist: [],
-          friendRequestlist: [],
-          isNewUser: false,
-          privateAccount: false,
-        };
+        // console.log(userData)
 
-        console.log(userData)
-        dispatch(setUser(userData))
       } else {
         dispatch(clearUser())
       }

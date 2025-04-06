@@ -19,8 +19,17 @@ const userSchema = mongoose.Schema(
     privateAccount: { type: Boolean, default: false },
     lastChat: [
       {
-        userId: { type:String },
+        userId: { type: String },
         time: Date,
+      },
+    ],
+    UnReadedMsg: [
+      {
+        Re_user: { type: String },
+        message: { type: String },
+        Re_time: { type: String },
+        count: { type: Number },
+        seened: { type: Boolean },
       },
     ],
   },

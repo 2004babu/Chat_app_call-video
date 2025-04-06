@@ -4,6 +4,7 @@ import { RootState } from '../../Redux/Store'
 import { useDispatch, useSelector } from 'react-redux'
 import { DefaultEventsMap } from '@socket.io/component-emitter'
 import { setUsers } from '../../Redux/Slices/UserSlice'
+import { setUnReadedMsg } from '../../Redux/Slices/UserSlice'
 
 interface SocketType {
     socket: Socket<DefaultEventsMap, DefaultEventsMap> | null,
@@ -57,9 +58,15 @@ const SocketContext: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             })
         }
         socket?.on('recieveMSG', (data) => {
+            console.log(data);
 
-
-
+            if (data?.message) {
+                const selectedData = {
+                    message: data.message,
+                    Re_user: data?.senderId
+                }
+                dispatch(setUnReadedMsg(selectedData))
+            }
 
             const ShowNOtification = async (message: string) => {
                 if (!("Notification" in window)) {
@@ -68,7 +75,7 @@ const SocketContext: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 }
 
                 if (Notification.permission === 'granted') {
-                    new Notification("New Message", {
+                    new Notification(data?.msg, {
                         body: message,
                         icon: "./unknown.png", // Make sure this image exists
                         tag: "new-msg", // Prevent duplicate notifications
@@ -102,6 +109,10 @@ const SocketContext: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             }
         })
 
+        return () => {
+            // socket?.off('recieveMSG')
+            socket?.off('onlineUsers')
+        }
 
     }, [socket, users])
     // console.log(onlineUsers);

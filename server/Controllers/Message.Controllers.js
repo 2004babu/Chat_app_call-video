@@ -9,6 +9,55 @@ exports.addFriend = async (req, res, next) => {
     return res.status(404).json({ error });
   }
 };
+exports.seenedmsg = async (req, res, next) => {
+  try {
+    const userId = req.user.uid;
+    const chatUserId = req.body.chatUserId;
+
+    if (!userId||!chatUserId) {
+      return res.status(400).json({ message: "Invalid user data" });
+    }
+
+    let user = await userModel.findOne({ uid: userId });
+    // let chatuser = await userModel.findOne({ uid: chatUserId });
+
+    if (
+      user?.UnReadedMsg?.some(
+        (item) => item.Re_user.toString() === chatUserId.toString()
+      )
+    ) {
+      let existCount = user.UnReadedMsg.find(
+        (item) => item.Re_user.toString() === chatUserId.toString()
+      );
+
+      if (existCount?.count) {
+        existCount.seened = true;
+        existCount.count = 0;
+      }
+      console.log("existCount",existCount);
+      
+      user.UnReadedMsg = [
+        existCount,
+        ...user.UnReadedMsg.filter(
+          (item) => item.Re_user.toString() !== chatUserId.toString()
+        ),
+      ];
+    }
+
+    console.log("user.UnReadedMsg",user.UnReadedMsg);
+    
+    await user.save();
+
+    return res.status(200).json({
+      message: "setseened Successfuly!",
+
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ error });
+  }
+};
 exports.chat = async (req, res, next) => {
   try {
     const userId = req.user.uid;
@@ -82,19 +131,51 @@ exports.chat = async (req, res, next) => {
         (item) => item.userId.toString() !== userId.toString()
       ),
     ];
+    if (
+      Chatuser?.UnReadedMsg?.some(
+        (item) => item.Re_user.toString() === userId.toString()
+      )
+    ) {
+      const existCount = Chatuser.UnReadedMsg.find(
+        (item) => item.Re_user.toString() === userId.toString()
+      );
+      Chatuser.UnReadedMsg = [
+        {
+          Re_user: userId,
+          message: msg,
+          Re_time: Date.now(),
+          count: existCount ? existCount.count + 1 : 1,
+          seened: false,
+        },
+        ,
+        ...Chatuser.UnReadedMsg.filter(
+          (item) => item.Re_user.toString() !== userId.toString()
+        ),
+      ];
+    } else {
+      Chatuser.UnReadedMsg = [
+        {
+          Re_user: userId,
+          message: msg,
+          Re_time: Date.now(),
+          count: 1,
+          seened: false,
+        },
+
+        ...Chatuser.UnReadedMsg,
+      ];
+    }
 
     await Chatuser.save();
     console.log(Chatuser, receiverId, userId);
 
-    return res
-      .status(200)
-      .json({
-        message: "msg Send Successfuly!",
-        conversation,
-        message,
-        user,
-        Chatuser,
-      });
+    return res.status(200).json({
+      message: "msg Send Successfuly!",
+      conversation,
+      message,
+      user,
+      Chatuser,
+    });
   } catch (error) {
     console.log(error);
     return res.status(404).json({ error });

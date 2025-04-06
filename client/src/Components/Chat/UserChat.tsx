@@ -1,7 +1,7 @@
 import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setChatUser, setUser, setUsers } from '../../Redux/Slices/UserSlice'
+import { setChatUser, setSeenUnReadedMsg, setUser, setUsers } from '../../Redux/Slices/UserSlice'
 import { RootState } from '../../Redux/Store'
 import { useNavigate, useParams } from 'react-router-dom'
 import { setConversation } from '../../Redux/Slices/messageSlice'
@@ -20,7 +20,6 @@ const UserChat = () => {
 
 
     const inputRef = useRef<HTMLInputElement | null>(null)
-    // const [isFriend, setIsFriend] = useState<boolean>(false)
     const [isOnlineUser, setIsOnlineUser] = useState<boolean>(false)
     const dispatch = useDispatch()
     const [isLoaded, setisLoaded] = useState<boolean>(false)
@@ -30,13 +29,14 @@ const UserChat = () => {
     const { ChatUser, user, users } = useSelector((state: RootState) => state.user)
     const { conversation } = useSelector((state: RootState) => state.conversation)
 
-    // console.log(ChatUser);
 
     const navigate = useNavigate()
     const wholeChatRefEle = useRef<HTMLDivElement>(null)
 
     const { callUser } = useCall()!;
     const { socket, onlineUsers } = useSocketContext()!
+
+    const { id } = useParams()
 
 
 
@@ -130,7 +130,7 @@ const UserChat = () => {
         if (!chatText) return;
         setChatSendisLoaded(true);
 
-        const data = { receiverId: userChatId, msg: chatText };
+        const data = { senderId: user?.uid, receiverId: userChatId, msg: chatText };
 
         if (socket) {
 
@@ -146,6 +146,10 @@ const UserChat = () => {
             socket?.emit('newMsg', data);
 
             if (conversation._id) {
+
+                console.log(conversation, data);
+
+
                 const updatedMessages = [...conversation.messages, {
                     senderId: user?.uid ?? '',
                     receiverId: userChatId ?? '',
@@ -185,26 +189,44 @@ const UserChat = () => {
 
 
     useEffect(() => {
+        if (!socket || !conversation?._id || !id) return;
 
-        if (socket && conversation?._id) {
-            socket.on('recieveMSG', (da) => {
+        
+        const handler = (da: any) => {
+            console.log(conversation.participants,da.senderId,id);
+            const isInConversation =
+                da.senderId &&
+                conversation.participants.includes(da.senderId) &&
+                conversation.participants.includes(id);
 
-                let newedit = { conversation: { _id: conversation?._id, messages: [...conversation?.messages, da], participants: conversation?.participants } }
-                dispatch(setConversation(newedit))
+            if (isInConversation) {
+                const updatedConversation = {
+                    conversation: {
+                        _id: conversation._id,
+                        messages: [...conversation.messages, da],
+                        participants: conversation.participants,
+                    },
+                };
 
+                dispatch(setConversation(updatedConversation));
+            }
+        };
 
-            })
-        }
+        socket.on('recieveMSG', handler);
 
         if (inputRef.current) {
             inputRef.current.focus()
         }
         autoScrollDown()
-    }, [socket, conversation])
+        return () => {
+            socket.off('recieveMSG', handler); // Cleanup to prevent duplicate listeners
+        };
+    }, [socket, conversation, id, dispatch]);
 
 
-    
-    
+
+
+
     const autoScrollDown = () => {
 
         wholeChatRefEle.current?.scrollTo(0, wholeChatRefEle.current?.scrollHeight)
@@ -219,6 +241,43 @@ const UserChat = () => {
         callUser(ChatUser?.uid ?? "")
         navigate('/call');
     }
+
+    const setSeenedMsgServer = async (id: string) => {
+        dispatch(setSeenUnReadedMsg({ Re_user: id }))
+        try {
+            const apiURL = import.meta.env.VITE_BACKEND_URL;
+            await axios.post(apiURL + "/message/seenedmsg", { chatUserId: id }, { withCredentials: true });
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+    useEffect(() => {
+        if (id) {
+            console.log(id);
+            
+            setSeenedMsgServer(id)
+        }
+
+
+    }, [id])
+    useEffect(() => {
+        if (socket) {
+            socket?.on('recieveMSG', (data) => {
+                if (data.senderId === id) {
+                    setSeenedMsgServer(data.senderId)
+                    console.log(data);
+
+                }
+
+
+            })
+        }
+
+        return () => {
+            socket?.off('recieveMSG');
+        }
+    }, [socket])
 
 
     return (
